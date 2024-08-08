@@ -1,0 +1,101 @@
+name: "EK Pachca"
+description: "Action for sending notifications to Pachca messenger"
+author: "ESSENTIALKAOS"
+
+branding:
+  icon: 'bell'
+  color: 'white'
+
+################################################################################
+
+inputs:
+  webhook:
+    description: "Webhook URL"
+    required: true
+
+  payload:
+    description: "Payload format (raw/pretty)"
+    required: false
+    default: "pretty"
+
+outputs:
+  status-code:
+    description: "API response status code"
+    value: ${{ steps.api-status.outputs.status-code }}
+
+################################################################################
+
+runs:
+  using: "composite"
+  steps:
+    - name: Validate action input
+      shell: bash
+      run: |
+        # [validate-action-input]
+
+        if [[ "${{inputs.payload}}" != "raw" && "${{inputs.payload}}" != "pretty" ]] ; then
+          echo "::error ::Payload format ${{inputs.payload}} is not supported"
+          exit 1
+        fi
+
+    - name: Send notification with raw data
+      if: ${{inputs.payload}} == "raw"
+      id: send-raw-notification
+      shell: bash
+      run: |
+        # [send-raw-notification]
+
+        COMMIT_SHA="${{github.sha}}"
+        COMMIT_SHA_SHORT="${COMMIT_SHA:0:7}"
+        COMMIT_DATE=$(date --date="${{github.event.head_commit.timestamp}}" +'%Y/%m/%d %H:%M')
+
+        JSON_DATA=$(cat << EOF
+        {
+          "job": "${{github.job}}",
+          "event_name": "${{github.event_name}}",
+          "repository": "${{github.repository}}",
+          "run_attempt": ${{github.run_attempt}},
+          "run_number": ${{github.run_number}},
+          "actor": "${{github.actor}}",
+          "workflow": "${{github.workflow}}",
+          "sha": "$COMMIT_SHA",
+          "sha_short": "$COMMIT_SHA_SHORT",
+          "ref": "${{github.ref_name}}",
+          "author_email": "${{github.event.head_commit.author.email}}",
+          "author_name": "${{github.event.head_commit.author.name}}",
+          "author_username": "${{github.event.head_commit.author.username}}",
+          "commit_message": "${{github.event.head_commit.message}}",
+          "commit_url": "${{github.event.head_commit.url}}",
+          "commit_date": "$COMMIT_DATE"
+        }
+        EOF
+        )
+
+        echo "$JSON_DATA" > payload.json
+
+        status_code=$(curl -s -H 'Content-Type: application/json' -X POST --data @payload.json --write-out "%{http_code}" --output /dev/null "${{inputs.webhook}}")
+
+        echo "status-code=$status_code" >> $GITHUB_OUTPUT
+
+        if [[ $status_code -gt 400 || $status_code -lt 200 ]] ; then
+          echo "::error ::Pachca API returned non-ok status code $status_code"
+          exit 1
+        fi
+
+    - name: Send pretty notification
+      if: ${{inputs.payload}} == "pretty"
+      id: send-pretty-notification
+      shell: bash
+      run: |
+        # [send-pretty-notification]
+
+    - name: Set API status code
+      if: success() || failure()
+      id: api-status
+      shell: bash
+      run: |
+        # [api-status]
+
+        if [[ -n "${{ steps.send-raw-notification.outputs.status-code }}" ]] ; then
+          echo "status-code=${{ steps.send-raw-notification.outputs.status-code }}"
+        fi
