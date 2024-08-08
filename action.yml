@@ -13,11 +13,6 @@ inputs:
     description: "Webhook URL"
     required: true
 
-  payload-format:
-    description: "Payload format (raw/pretty)"
-    required: false
-    default: "pretty"
-
 outputs:
   status-code:
     description: "API response status code"
@@ -28,24 +23,21 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Validate action input
+    - name: Send notification data
+      id: send-notification
       shell: bash
       run: |
-        # [validate-action-input]
-
-        if [[ "${{inputs.payload-format}}" != "raw" && "${{inputs.payload-format}}" != "pretty" ]] ; then
-          echo "::error ::Payload format ${{inputs.payload-format}} is not supported"
-          exit 1
-        fi
-
-    - name: Send notification with raw data
-      if: ${{inputs.payload-format}} == "raw"
-      id: send-raw-notification
-      shell: bash
-      run: |
-        # [send-raw-notification]
+        # [send-notification]
 
         if [[ "${{github.event_name}}" == "pull_request" ]] ; then
+        PR_CREATED_DATE=$(date --date="${{github.event.pull_request.created_at}}" +'%Y/%m/%d %H:%M')
+        MERGE_COMMIT_SHA="${{github.event.pull_request.merge_commit_sha}}"
+        MERGE_COMMIT_SHA_SHORT="${MERGE_COMMIT_SHA:0:7}"
+
+        if [[ "${{github.event.pull_request.merged}}" == "true" ]] ; then
+          PR_MERGED_DATE=$(date --date="${{github.event.pull_request.merged_at}}" +'%Y/%m/%d %H:%M')
+        fi
+
         JSON_DATA=$(cat << EOF
         {
           "job": "${{github.job}}",
@@ -55,15 +47,20 @@ runs:
           "run_number": ${{github.run_number}},
           "actor": "${{github.actor}}",
           "workflow": "${{github.workflow}}",
-          "sha": "$COMMIT_SHA",
-          "sha_short": "$COMMIT_SHA_SHORT",
           "ref_head": "${{github.head_ref}}",
           "ref_base": "${{github.base_ref}}",
-          "pr_url": "${{github.event.pull_request.html_url}}",
+          "merge_sha": "$MERGE_COMMIT_SHA",
+          "merge_sha_short": "$MERGE_COMMIT_SHA_SHORT",
           "pr_number": ${{github.event.pull_request.number}},
+          "pr_state": "${{github.event.pull_request.state}}",
+          "pr_url": "${{github.event.pull_request.html_url}}",
+          "pr_merged": ${{github.event.pull_request.merged}},
+          "pr_created_date": "$PR_CREATED_DATE",
+          "pr_merged_date": "$PR_MERGED_DATE",
           "pr_draft": ${{github.event.pull_request.draft}},
           "pr_changed_files": ${{github.event.pull_request.changed_files}},
-          "pr_commits": ${{github.event.pull_request.commits}},
+          "pr_commits_num": ${{github.event.pull_request.commits}},
+          "pr_mergeable_state": "${{github.event.pull_request.mergeable_state}}",
           "pr_dummy": "empty"
         }
         EOF
@@ -107,13 +104,6 @@ runs:
           exit 1
         fi
 
-    - name: Send pretty notification
-      if: ${{inputs.payload-format}} == "pretty"
-      id: send-pretty-notification
-      shell: bash
-      run: |
-        # [send-pretty-notification]
-
     - name: Set API status code
       if: success() || failure()
       id: api-status
@@ -121,12 +111,7 @@ runs:
       run: |
         # [api-status]
 
-        if [[ -n "${{ steps.send-raw-notification.outputs.status-code }}" ]] ; then
-          echo "status-code=${{ steps.send-raw-notification.outputs.status-code }}" >> $GITHUB_OUTPUT
-          echo -e "\033[32mNotification (raw) successfully sent\033[0m"
-        fi
-
-        if [[ -n "${{ steps.send-pretty-notification.outputs.status-code }}" ]] ; then
-          echo "status-code=${{ steps.send-pretty-notification.outputs.status-code }}" >> $GITHUB_OUTPUT
-          echo -e "\033[32mNotification (pretty) successfully sent\033[0m"
+        if [[ -n "${{ steps.send-notification.outputs.status-code }}" ]] ; then
+          echo "status-code=${{ steps.send-notification.outputs.status-code }}" >> $GITHUB_OUTPUT
+          echo -e "\033[32mNotification successfully sent\033[0m"
         fi
