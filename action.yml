@@ -13,7 +13,7 @@ inputs:
     description: "Webhook URL"
     required: true
 
-  payload:
+  payload-format:
     description: "Payload format (raw/pretty)"
     required: false
     default: "pretty"
@@ -33,13 +33,13 @@ runs:
       run: |
         # [validate-action-input]
 
-        if [[ "${{inputs.payload}}" != "raw" && "${{inputs.payload}}" != "pretty" ]] ; then
-          echo "::error ::Payload format ${{inputs.payload}} is not supported"
+        if [[ "${{inputs.payload-format}}" != "raw" && "${{inputs.payload-format}}" != "pretty" ]] ; then
+          echo "::error ::Payload format ${{inputs.payload-format}} is not supported"
           exit 1
         fi
 
     - name: Send notification with raw data
-      if: ${{inputs.payload}} == "raw"
+      if: ${{inputs.payload-format}} == "raw"
       id: send-raw-notification
       shell: bash
       run: |
@@ -85,7 +85,7 @@ runs:
         echo -e "\033[32mNotification successfully sent\033[0m"
 
     - name: Send pretty notification
-      if: ${{inputs.payload}} == "pretty"
+      if: ${{inputs.payload-format}} == "pretty"
       id: send-pretty-notification
       shell: bash
       run: |
