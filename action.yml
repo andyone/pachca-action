@@ -82,8 +82,6 @@ runs:
           exit 1
         fi
 
-        echo -e "\033[32mNotification successfully sent\033[0m"
-
     - name: Send pretty notification
       if: ${{inputs.payload-format}} == "pretty"
       id: send-pretty-notification
@@ -100,4 +98,10 @@ runs:
 
         if [[ -n "${{ steps.send-raw-notification.outputs.status-code }}" ]] ; then
           echo "status-code=${{ steps.send-raw-notification.outputs.status-code }}" >> $GITHUB_OUTPUT
+          echo -e "\033[32mNotification (raw) successfully sent\033[0m"
+        fi
+
+        if [[ -n "${{ steps.send-pretty-notification.outputs.status-code }}" ]] ; then
+          echo "status-code=${{ steps.send-pretty-notification.outputs.status-code }}" >> $GITHUB_OUTPUT
+          echo -e "\033[32mNotification (pretty) successfully sent\033[0m"
         fi
