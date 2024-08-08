@@ -13,6 +13,18 @@ inputs:
     description: "Webhook URL"
     required: true
 
+  title:
+    description: "Notification title"
+    required: true
+
+  message:
+    description: "Notification message"
+    required: true
+
+  status:
+    description: "Notification status"
+    required: false
+
 outputs:
   status-code:
     description: "API response status code"
@@ -29,6 +41,16 @@ runs:
       run: |
         # [send-notification]
 
+        JSON_DATA=$(cat << EOF
+          {
+            "title": "${{inputs.title}}",
+            "message": "${{inputs.message}}",
+            "status": "${{inputs.status}}",
+        EOF
+        )
+
+        echo "$JSON_DATA" > payload.json
+
         if [[ "${{github.event_name}}" == "pull_request" ]] ; then
         PR_CREATED_DATE=$(date --date="${{github.event.pull_request.created_at}}" +'%Y/%m/%d %H:%M')
         MERGE_COMMIT_SHA="${{github.event.pull_request.merge_commit_sha}}"
@@ -39,7 +61,6 @@ runs:
         fi
 
         JSON_DATA=$(cat << EOF
-        {
           "job": "${{github.job}}",
           "event_name": "${{github.event_name}}",
           "repository": "${{github.repository}}",
@@ -71,7 +92,6 @@ runs:
         COMMIT_DATE=$(date --date="${{github.event.head_commit.timestamp}}" +'%Y/%m/%d %H:%M')
 
         JSON_DATA=$(cat << EOF
-        {
           "job": "${{github.job}}",
           "event_name": "${{github.event_name}}",
           "repository": "${{github.repository}}",
@@ -93,7 +113,7 @@ runs:
         )
         fi
 
-        echo "$JSON_DATA" > payload.json
+        echo "$JSON_DATA" >> payload.json
 
         status_code=$(curl -s -H 'Content-Type: application/json' -A 'GHA-EK-Pachca/1' -X POST --data @payload.json --write-out "%{http_code}" --output /dev/null "${{inputs.webhook}}")
 
