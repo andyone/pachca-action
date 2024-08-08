@@ -21,10 +21,6 @@ inputs:
     description: "Notification message"
     required: true
 
-  status:
-    description: "Notification status"
-    required: false
-
   type:
     description: "Notification type"
     required: false
