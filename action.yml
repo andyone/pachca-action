@@ -79,6 +79,9 @@ runs:
           PR_MERGED_DATE=$(date --date="${{github.event.pull_request.merged_at}}" +'%Y/%m/%d %H:%M')
         fi
 
+        PR_ASSIGNEES=$(echo '${{ toJson(github.event.pull_request.assignees) }}' | jq -r '. | map(.login) | join(", ")')
+        PR_LABELS=$(echo '${{ toJson(github.event.pull_request.labels) }}' | jq -r '. | map(.name) | join(", ")')
+
         JSON_DATA=$(cat << EOF
           "ref_head": "${{github.head_ref}}",
           "ref_base": "${{github.base_ref}}",
@@ -94,7 +97,8 @@ runs:
           "pr_draft": ${{github.event.pull_request.draft}},
           "pr_changed_files": ${{github.event.pull_request.changed_files}},
           "pr_commits_num": ${{github.event.pull_request.commits}},
-          "pr_mergeable_state": "${{github.event.pull_request.mergeable_state}}"
+          "pr_assignees": "$PR_ASSIGNEES",
+          "pr_lables": "$PR_LABELS"
         }
         EOF
         )
