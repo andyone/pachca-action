@@ -42,10 +42,10 @@ runs:
         # [send-notification]
 
         JSON_DATA=$(cat << EOF
-          {
-            "title": "${{inputs.title}}",
-            "message": "${{inputs.message}}",
-            "status": "${{inputs.status}}",
+        {
+          "title": "${{inputs.title}}",
+          "message": "${{inputs.message}}",
+          "status": "${{inputs.status}}",
         EOF
         )
 
