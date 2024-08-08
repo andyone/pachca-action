@@ -55,8 +55,6 @@ runs:
             "run_number": ${{github.run_number}},
             "actor": "${{github.actor}}",
             "workflow": "${{github.workflow}}",
-            "sha": "$COMMIT_SHA",
-            "sha_short": "$COMMIT_SHA_SHORT",
             "ref_head": "${{github.head_ref}}",
             "ref_base": "${{github.base_ref}}",
             "pr_url": "${{github.event.pull_request.html_url}}",
