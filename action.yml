@@ -25,6 +25,10 @@ inputs:
     description: "Notification status"
     required: false
 
+  type:
+    description: "Notification type"
+    required: false
+
 outputs:
   status-code:
     description: "API response status code"
@@ -46,6 +50,7 @@ runs:
           "title": "${{inputs.title}}",
           "message": "${{inputs.message}}",
           "status": "${{inputs.status}}",
+          "type": "${{inputs.type}}",
         EOF
         )
 
