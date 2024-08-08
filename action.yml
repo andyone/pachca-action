@@ -121,19 +121,7 @@ runs:
         EOF
         )
         else
-        COMMIT_SHA="${{github.sha}}"
-        COMMIT_SHA_SHORT="${COMMIT_SHA:0:7}"
-
         JSON_DATA=$(cat << EOF
-          "job": "${{github.job}}",
-          "event_name": "${{github.event_name}}",
-          "repository": "${{github.repository}}",
-          "run_attempt": ${{github.run_attempt}},
-          "run_number": ${{github.run_number}},
-          "actor": "${{github.actor}}",
-          "workflow": "${{github.workflow}}",
-          "sha": "$COMMIT_SHA",
-          "sha_short": "$COMMIT_SHA_SHORT",
           "ref": "${{github.ref_name}}"
         }
         EOF
