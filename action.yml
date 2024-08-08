@@ -81,8 +81,7 @@ runs:
           "pr_draft": ${{github.event.pull_request.draft}},
           "pr_changed_files": ${{github.event.pull_request.changed_files}},
           "pr_commits_num": ${{github.event.pull_request.commits}},
-          "pr_mergeable_state": "${{github.event.pull_request.mergeable_state}}",
-          "pr_dummy": "empty"
+          "pr_mergeable_state": "${{github.event.pull_request.mergeable_state}}"
         }
         EOF
         )
