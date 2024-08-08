@@ -46,7 +46,7 @@ runs:
         # [send-raw-notification]
 
         JSON_DATA=$(cat << EOF
-          {
+        {
             "job": "${{github.job}}",
             "event_name": "${{github.event_name}}",
             "repository": "${{github.repository}}",
@@ -62,9 +62,9 @@ runs:
             "pr_changed_files": ${{github.event.pull_request.changed_files}},
             "pr_commits": ${{github.event.pull_request.commits}},
             "pr_dummy": "empty"
-          }
-          EOF
-          )
+        }
+        EOF
+        )
 
         echo "$JSON_DATA" > payload.json
 
