@@ -73,7 +73,7 @@ runs:
 
         echo "$JSON_DATA" > payload.json
 
-        status_code=$(curl -s -H 'Content-Type: application/json' -X POST --data @payload.json --write-out "%{http_code}" --output /dev/null "${{inputs.webhook}}")
+        status_code=$(curl -s -H 'Content-Type: application/json' -A 'GHA-EK-Pachca/1' -X POST --data @payload.json --write-out "%{http_code}" --output /dev/null "${{inputs.webhook}}")
 
         echo "status-code=$status_code" >> $GITHUB_OUTPUT
 
@@ -81,6 +81,8 @@ runs:
           echo "::error ::Pachca API returned non-ok status code $status_code"
           exit 1
         fi
+
+        echo -e "\033[32mNotification successfully sent\033[0m"
 
     - name: Send pretty notification
       if: ${{inputs.payload}} == "pretty"
@@ -97,5 +99,5 @@ runs:
         # [api-status]
 
         if [[ -n "${{ steps.send-raw-notification.outputs.status-code }}" ]] ; then
-          echo "status-code=${{ steps.send-raw-notification.outputs.status-code }}"
+          echo "status-code=${{ steps.send-raw-notification.outputs.status-code }}" >> $GITHUB_OUTPUT
         fi
